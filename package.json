@@ -17,6 +17,7 @@
     "start": "npm run build -- --servedir=./public"
   },
   "dependencies": {
+    "prettier": "^3.2.5",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "use-ref-from": "^0.0.3"
