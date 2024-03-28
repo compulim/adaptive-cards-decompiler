@@ -45,6 +45,12 @@ export default memo(function App() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const walk = (htmlElement: HTMLElement): any => {
+      const spacing =
+        !htmlElement.previousSibling ||
+        (htmlElement.previousSibling as HTMLElement).classList.contains('ac-horizontal-separator')
+          ? undefined
+          : 'none';
+
       const { classList } = htmlElement;
 
       if (classList.contains('ac-container') && !htmlElement.getAttribute('role')) {
@@ -66,6 +72,7 @@ export default memo(function App() {
                 body: childCardElements.filter(Boolean)
               }
             : { type: 'Container', items: childCardElements.filter(Boolean) }),
+          spacing,
           width:
             htmlElement.style.flex === '0 1 auto'
               ? 'auto'
@@ -73,7 +80,7 @@ export default memo(function App() {
                 ? 'stretch'
                 : (htmlElement.style.flexBasis || '').endsWith('px')
                   ? htmlElement.style.flexBasis
-                  : +htmlElement.style.flexBasis,
+                  : +htmlElement.style.flexBasis || undefined,
           selectAction: classList.contains('ac-selectable') ? { type: 'Action.Submit' } : undefined
         };
       } else if (classList.contains('ac-columnSet')) {
@@ -91,11 +98,12 @@ export default memo(function App() {
               htmlElement.querySelectorAll('& > .ac-vertical-separator, & > .ac-horizontal-separate')
             )
           ].some(separator => !!separator.style.border),
+          spacing,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           columns: childCardElements.filter(Boolean).map((cardElement: any) => ({
             type: 'Column',
             selectAction: cardElement.selectAction,
-            width: cardElement.width,
+            width: cardElement.width || undefined,
             items: cardElement.items
           }))
         };
@@ -109,14 +117,8 @@ export default memo(function App() {
           type: 'TextBlock',
           color: color === 'rgb(236, 19, 14)' ? 'Attention' : color === 'rgb(111, 111, 111)' ? 'Light' : undefined,
           style: role === 'heading' ? 'heading' : undefined,
-          horizontalAlignment:
-            textAlign === 'center'
-              ? 'center'
-              : textAlign === 'start'
-                ? 'left'
-                : textAlign === 'end'
-                  ? 'right'
-                  : undefined,
+          horizontalAlignment: textAlign === 'center' ? 'center' : textAlign === 'end' ? 'right' : undefined,
+          spacing,
           size:
             parseInt(fontSize) >= 24
               ? 'extraLarge'
@@ -128,7 +130,11 @@ export default memo(function App() {
                     ? 'small'
                     : undefined,
           weight:
-            +htmlElement.style.fontWeight > 400 ? 'bolder' : +htmlElement.style.fontWeight < 400 ? 'lighter' : 'normal',
+            +htmlElement.style.fontWeight > 400
+              ? 'bolder'
+              : +htmlElement.style.fontWeight < 400
+                ? 'lighter'
+                : undefined,
           wrap: htmlElement.style.textOverflow ? undefined : true,
           text: htmlElement.textContent?.trim()
         };
@@ -139,6 +145,7 @@ export default memo(function App() {
       } else if (classList.contains('ac-factset')) {
         return {
           type: 'FactSet',
+          spacing,
           facts: [...nodeListToIterable(htmlElement.querySelectorAll('tbody > tr'))].map(row => ({
             title: row.querySelector('& > .ac-fact-title')?.textContent,
             value: row.querySelector('& > .ac-fact-value')?.textContent
@@ -154,11 +161,12 @@ export default memo(function App() {
           ? {
               type: 'Image',
               horizontalAlignment:
-                justifyContent === 'center' ? 'Center' : justifyContent === 'flex-end' ? 'Right' : 'Left',
+                justifyContent === 'center' ? 'Center' : justifyContent === 'flex-end' ? 'Right' : undefined,
               url: imageElement.getAttribute('src'),
               altText: imageElement.getAttribute('alt'),
               height: imageElement.style.height || undefined,
-              width: imageElement.style.width || undefined
+              width: imageElement.style.width || undefined,
+              spacing
             }
           : undefined;
       } else if (htmlElement.querySelector('.ac-actionSet')) {
@@ -194,6 +202,7 @@ export default memo(function App() {
         return {
           type: 'Table',
           showGridLines: !!htmlElement.style.borderTop,
+          spacing,
           columns: new Array(
             [...htmlCollectionToIterable(htmlElement.children)].reduce(
               (maxColumn, row) => Math.max(maxColumn, row.childElementCount),
