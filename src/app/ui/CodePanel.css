@@ -1,0 +1,39 @@
+.code-panel {
+  border-bottom: solid 4px transparent;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+  font-family: monospace;
+  font-size: x-large;
+  height: 100%;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+}
+
+.code-panel:focus-within {
+  border-bottom-color: var(--color__accent);
+}
+
+.code-panel__name {
+  background-color: var(--color__accent);
+  border-radius: 0 4px 0;
+  color: white;
+  font-size: smaller;
+  padding: .2em .5em;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.code-panel__text-area {
+  border: 0;
+  box-sizing: border-box;
+  font-family: monospace;
+  font-size: large;
+  height: 100%;
+  outline: 0;
+  padding: 1em;
+  resize: none;
+  width: 100%;
+}
