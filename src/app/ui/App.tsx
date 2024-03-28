@@ -26,7 +26,7 @@ function* nodeListToIterable(children: NodeListOf<HTMLElement>): IterableIterato
   }
 }
 
-function findPreviousElementSibling(node: HTMLElement): HTMLElement | undefined {
+function findPreviousElementSibling(node: HTMLElement): HTMLElement | void {
   let current = node.previousSibling;
 
   while (current) {
