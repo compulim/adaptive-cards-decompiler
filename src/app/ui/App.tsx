@@ -26,6 +26,18 @@ function* nodeListToIterable(children: NodeListOf<HTMLElement>): IterableIterato
   }
 }
 
+function findPreviousElementSibling(node: HTMLElement): HTMLElement | undefined {
+  let current = node.previousSibling;
+
+  while (current) {
+    if (current?.nodeType === 1) {
+      return current as HTMLElement;
+    }
+
+    current = current.previousSibling;
+  }
+}
+
 export default memo(function App() {
   const [error, setError] = useState<string | undefined>(undefined);
   const [html, setHTML] = useState<string>(DEFAULT_HTML);
@@ -45,15 +57,38 @@ export default memo(function App() {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const walk = (htmlElement: HTMLElement): any => {
-      const spacing =
-        !htmlElement.previousSibling ||
-        (htmlElement.previousSibling as HTMLElement).classList.contains('ac-horizontal-separator')
-          ? undefined
-          : 'none';
+      const previousElement = findPreviousElementSibling(htmlElement);
+      const previousSeparator = previousElement?.classList.contains('ac-horizontal-separator')
+        ? previousElement
+        : undefined;
+      const spacing = previousSeparator ? undefined : 'none';
 
       const { classList } = htmlElement;
 
-      if (classList.contains('ac-container') && !htmlElement.getAttribute('role')) {
+      if (htmlElement.getAttribute('role') === 'table') {
+        return {
+          type: 'Table',
+          showGridLines: !!htmlElement.style.borderTop,
+          spacing,
+          columns: new Array(
+            [...htmlCollectionToIterable(htmlElement.children)].reduce(
+              (maxColumn, row) => Math.max(maxColumn, row.childElementCount),
+              0
+            )
+          ).fill(1),
+          rows: [...htmlCollectionToIterable(htmlElement.children)].map(walk)
+        };
+      } else if (htmlElement.getAttribute('role') === 'row') {
+        return {
+          type: 'TableRow',
+          cells: [...htmlCollectionToIterable(htmlElement.children)].map(walk)
+        };
+      } else if (htmlElement.getAttribute('role') === 'columnheader' || htmlElement.getAttribute('role') === 'cell') {
+        return {
+          type: 'TableCell',
+          items: [...htmlCollectionToIterable(htmlElement.children)].map(walk)
+        };
+      } else if (classList.contains('ac-container')) {
         const isAdaptiveCard = classList.contains('ac-adaptiveCard');
 
         const childCardElements = [];
@@ -72,7 +107,19 @@ export default memo(function App() {
                 body: childCardElements.filter(Boolean)
               }
             : { type: 'Container', items: childCardElements.filter(Boolean) }),
+          separator: previousSeparator?.style.borderBottom ? true : undefined,
           spacing,
+          style:
+            htmlElement.style.backgroundColor === 'rgb(248, 248, 248)' ||
+            htmlElement.style.backgroundColor === 'rgb(249, 249, 249)'
+              ? 'emphasis'
+              : undefined,
+          verticalContentAlignment:
+            htmlElement.style.justifyContent === 'center'
+              ? 'center'
+              : htmlElement.style.justifyContent === 'flex-end'
+                ? 'bottom'
+                : undefined,
           width:
             htmlElement.style.flex === '0 1 auto'
               ? 'auto'
@@ -101,10 +148,12 @@ export default memo(function App() {
           spacing,
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           columns: childCardElements.filter(Boolean).map((cardElement: any) => ({
-            type: 'Column',
-            selectAction: cardElement.selectAction,
-            width: cardElement.width || undefined,
-            items: cardElement.items
+            ...cardElement,
+            type: 'Column'
+            // verticalAlignment: cardElement.verticalAlignment
+            // selectAction: cardElement.selectAction,
+            // width: cardElement.width || undefined,
+            // items: cardElement.items
           }))
         };
       } else if (classList.contains('ac-textBlock')) {
@@ -198,29 +247,6 @@ export default memo(function App() {
         }
 
         return undefined;
-      } else if (htmlElement.getAttribute('role') === 'table') {
-        return {
-          type: 'Table',
-          showGridLines: !!htmlElement.style.borderTop,
-          spacing,
-          columns: new Array(
-            [...htmlCollectionToIterable(htmlElement.children)].reduce(
-              (maxColumn, row) => Math.max(maxColumn, row.childElementCount),
-              0
-            )
-          ).fill(1),
-          rows: [...htmlCollectionToIterable(htmlElement.children)].map(walk)
-        };
-      } else if (htmlElement.getAttribute('role') === 'row') {
-        return {
-          type: 'TableRow',
-          cells: [...htmlCollectionToIterable(htmlElement.children)].map(walk)
-        };
-      } else if (htmlElement.getAttribute('role') === 'columnheader' || htmlElement.getAttribute('role') === 'cell') {
-        return {
-          type: 'TableCell',
-          items: [...htmlCollectionToIterable(htmlElement.children)].map(walk)
-        };
       }
     };
 
