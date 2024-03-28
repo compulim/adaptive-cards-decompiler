@@ -200,7 +200,7 @@ export default memo(function App() {
   return (
     <Fragment>
       <main className="app">
-        <h1 className="app__header">Adaptive Cards extractor</h1>
+        <h1 className="app__header">Adaptive Cards decompiler</h1>
         <div className="app__two-pane">
           <CodePanel name="HTML" onInput={setHTML} value={html} />
           <CodePanel name="JSON" readOnly={true} value={json || error || ''} />
